@@ -1095,9 +1095,9 @@
     <div class="model-grid">
       <div class="grid-header">
         <div>模型</div>
-        <div style="text-align:right">输入价格</div>
-        <div style="text-align:right">输出价格</div>
-        <div style="text-align:right">缓存读取</div>
+        <div style="text-align:right">输入价格<span style="font-size:9px;opacity:0.9;margin-left:2px">/1M</span></div>
+        <div style="text-align:right">输出价格<span style="font-size:9px;opacity:0.9;margin-left:2px">/1M</span></div>
+        <div style="text-align:right">缓存读取<span style="font-size:9px;opacity:0.9;margin-left:2px">/1M</span></div>
         <div style="text-align:right">上下文</div>
         <div style="text-align:right">操作</div>
       </div>
@@ -1133,8 +1133,8 @@
     <div class="stat"><div class="stat-val purple">${filteredModels.length}</div><div class="stat-label">模型总数</div></div>
     <div class="stat"><div class="stat-val green">${free}</div><div class="stat-label">免费模型</div></div>
     <div class="stat"><div class="stat-val">${Object.keys(Object.fromEntries(filteredModels.map(m => [m.provider, 1]))).length}</div><div class="stat-label">供应商数</div></div>
-    <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${min.toFixed(4)}</div><div class="stat-label">最低输入价</div></div>
-    <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${max.toFixed(2)}</div><div class="stat-label">最高输入价</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${min.toFixed(4)}<span style="font-size:10px;color:var(--text3);margin-left:2px">/1M</span></div><div class="stat-label">最低输入价</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${max.toFixed(2)}<span style="font-size:10px;color:var(--text3);margin-left:2px">/1M</span></div><div class="stat-label">最高输入价</div></div>
   `;
     }
 
