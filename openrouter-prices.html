@@ -1057,11 +1057,16 @@
         el.innerHTML = '<div class="no-results">无匹配模型</div>';
         return;
       }
-      el.innerHTML = `
+
+      // Build the layout scaffold only once.
+      // Subsequent calls (currency switch, filter, sort) skip this block entirely,
+      // so the sort bar and other static chrome are never destroyed → no flash.
+      if (!document.getElementById('statsBar')) {
+        el.innerHTML = `
     <div class="stats-bar" id="statsBar"></div>
     <div class="sort-bar">
       <span class="sort-label">排序：</span>
-      <button class="sort-btn active" id="sort_provider" onclick="setSort('provider')">供应商 <span class="arrow">↑</span></button>
+      <button class="sort-btn" id="sort_provider" onclick="setSort('provider')">供应商 <span class="arrow">↑</span></button>
       <button class="sort-btn" id="sort_input" onclick="setSort('input')">输入价格 <span class="arrow">↓</span></button>
       <button class="sort-btn" id="sort_output" onclick="setSort('output')">输出价格 <span class="arrow">↓</span></button>
       <button class="sort-btn" id="sort_context" onclick="setSort('context')">上下文 <span class="arrow">↓</span></button>
@@ -1097,10 +1102,22 @@
       <div class="model-rows" id="modelRows"></div>
     </div>
   `;
+        restoreSortUI();
+      }
+
       renderStats();
       renderChart();
       renderModelRows();
       renderCompareChart();
+    }
+
+    function restoreSortUI() {
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById('sort_' + sortBy);
+      if (btn) {
+        btn.classList.add('active');
+        btn.querySelector('.arrow').textContent = sortDir === 1 ? '↑' : '↓';
+      }
     }
 
     function renderStats() {
