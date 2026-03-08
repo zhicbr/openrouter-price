@@ -11,16 +11,16 @@
     --bg2: #111118;
     --bg3: #1a1a24;
     --bg4: #22222f;
-    --border: rgba(255,255,255,0.08);
-    --border2: rgba(255,255,255,0.14);
-    --text: #e8e8f0;
-    --text2: #9898b0;
-    --text3: #5a5a70;
+    --border: rgba(255,255,255,0.12);
+    --border2: rgba(255,255,255,0.20);
+    --text: #f0f0f8;
+    --text2: #b0b0d0;
+    --text3: #707090;
     --accent: #7c6fff;
     --accent2: #ff6b9d;
     --green: #3dffa0;
     --input-color: #7c6fff;
-    --output-color: #ff6b9d;
+    --output-color:ff6b9d;
     --free-color: #3dffa0;
     --glow: rgba(124,111,255,0.15);
   }
@@ -29,8 +29,8 @@
     --bg2: #ffffff;
     --bg3: #ebebf3;
     --bg4: #e0e0ea;
-    --border: rgba(0,0,0,0.08);
-    --border2: rgba(0,0,0,0.14);
+    --border: rgba(0,0,0,0.12);
+    --border2: rgba(0,0,0,0.20);
     --text: #18181f;
     --text2: #5a5a70;
     --text3: #9898b0;
@@ -58,7 +58,8 @@
     position: sticky;
     top: 0;
     z-index: 100;
-    backdrop-filter: blur(20px);
+    /* 移除模糊效果以提高清晰度 */
+    /* backdrop-filter: blur(20px); */
   }
 
   .logo {
@@ -144,7 +145,7 @@
   }
 
   .section-label {
-    font-size: 10px;
+    font-size: 11px;
     font-weight: 600;
     letter-spacing: 1.5px;
     text-transform: uppercase;
@@ -397,7 +398,7 @@
     grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px;
     gap: 8px;
     padding: 8px 12px;
-    font-size: 10px;
+    font-size: 11px;
     color: var(--text3);
     letter-spacing: 1px;
     text-transform: uppercase;
@@ -942,7 +943,7 @@ function renderChart() {
 
   // Grid lines
   const gridCount = 5;
-  ctx.font = '9px JetBrains Mono';
+  ctx.font = '11px JetBrains Mono';
   ctx.fillStyle = textColor;
   ctx.textAlign = 'right';
 
@@ -959,16 +960,17 @@ function renderChart() {
     const y = topPad + plotH - (scaleMode === 'log' ? (frac * plotH) : (gridVal / maxVal) * plotH);
     ctx.strokeStyle = gridColor;
     ctx.lineWidth = 1;
-    ctx.setLineDash([3,3]);
+    // 使用实线而不是虚线，提高清晰度
+    // ctx.setLineDash([3,3]);
     ctx.beginPath();
     ctx.moveTo(leftPad, y);
     ctx.lineTo(totalW - rightPad, y);
     ctx.stroke();
-    ctx.setLineDash([]);
+    // ctx.setLineDash([]);
 
     const sym = currency === 'CNY' ? '¥' : '$';
     const label = gridVal < 0.001 ? '0' : sym + gridVal.toFixed(gridVal < 0.1 ? 4 : 2);
-    ctx.fillText(label, leftPad - 6, y + 3);
+    ctx.fillText(label, leftPad - 8, y + 3);
   }
 
   // Bars
@@ -1010,7 +1012,7 @@ function renderChart() {
     ctx.save();
     ctx.translate(x + barW/2, topPad + plotH + 10);
     ctx.rotate(-Math.PI / 3);
-    ctx.font = '9px JetBrains Mono';
+    ctx.font = '10px JetBrains Mono';
     ctx.fillStyle = textColor;
     ctx.textAlign = 'right';
     const shortName = m.name.replace(/^[^:]+:\s*/, '').substring(0, 18);
@@ -1167,15 +1169,16 @@ function renderCompareChart() {
 
   // Grid
   ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
-  ctx.setLineDash([3,3]);
+  // 使用实线而不是虚线，提高清晰度
+  // ctx.setLineDash([3,3]);
   for (let i = 0; i <= 4; i++) {
     const y = topPad + plotH * (1 - i/4);
     ctx.beginPath(); ctx.moveTo(leftPad, y); ctx.lineTo(W - rightPad, y); ctx.stroke();
-    ctx.font = '9px JetBrains Mono'; ctx.fillStyle = textColor; ctx.textAlign = 'right';
+    ctx.font = '11px JetBrains Mono'; ctx.fillStyle = textColor; ctx.textAlign = 'right';
     const v = maxV * i / 4;
-    ctx.fillText((currency==='CNY'?'¥':'$') + v.toFixed(v<0.01?4:2), leftPad - 4, y + 3);
+    ctx.fillText((currency==='CNY'?'¥':'$') + v.toFixed(v<0.01?4:2), leftPad - 6, y + 3);
   }
-  ctx.setLineDash([]);
+  // ctx.setLineDash([]);
 
   // Bars (grouped)
   const barGroupW = plotW / compareModels.length;
@@ -1200,7 +1203,7 @@ function renderCompareChart() {
     ctx.save();
     ctx.translate(cx, topPad + plotH + 6);
     ctx.rotate(-Math.PI / 4);
-    ctx.font = '9px JetBrains Mono';
+    ctx.font = '10px JetBrains Mono';
     ctx.fillStyle = textColor;
     ctx.textAlign = 'right';
     ctx.fillText(m.name.replace(/^[^:]+:\s*/,'').substring(0,20), 0, 0);
