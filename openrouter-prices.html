@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-theme="light">
 
 <head>
   <meta charset="UTF-8">
@@ -819,10 +819,10 @@
     <div class="header-right">
       <div class="rate-badge" id="rateDisplay">汇率加载中...</div>
       <div class="currency-toggle">
-        <button class="currency-btn active" id="btnUSD" onclick="setCurrency('USD')">USD</button>
-        <button class="currency-btn" id="btnCNY" onclick="setCurrency('CNY')">CNY</button>
+        <button class="currency-btn" id="btnUSD" onclick="setCurrency('USD')">USD</button>
+        <button class="currency-btn active" id="btnCNY" onclick="setCurrency('CNY')">CNY</button>
       </div>
-      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+      <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">☀️</button>
     </div>
   </header>
 
@@ -881,7 +881,7 @@
     let allModels = [];
     let filteredModels = [];
     let compareModels = [];
-    let currency = 'USD';
+    let currency = 'CNY';
     let cnyRate = 7.1;
     let selectedProviders = new Set();
     let allProviders = [];
