@@ -886,8 +886,8 @@
     let selectedProviders = new Set();
     let allProviders = [];
     let scaleMode = 'linear';
-    let sortBy = 'provider';
-    let sortDir = 1;
+    let sortBy = 'input';
+    let sortDir = -1;
     let chartInstance = null;
     let lineChartInstance = null;
 
@@ -1066,10 +1066,10 @@
     <div class="stats-bar" id="statsBar"></div>
     <div class="sort-bar">
       <span class="sort-label">排序：</span>
-      <button class="sort-btn" id="sort_provider" onclick="setSort('provider')">供应商 <span class="arrow">↑</span></button>
       <button class="sort-btn" id="sort_input" onclick="setSort('input')">输入价格 <span class="arrow">↓</span></button>
       <button class="sort-btn" id="sort_output" onclick="setSort('output')">输出价格 <span class="arrow">↓</span></button>
       <button class="sort-btn" id="sort_context" onclick="setSort('context')">上下文 <span class="arrow">↓</span></button>
+      <button class="sort-btn" id="sort_provider" onclick="setSort('provider')">供应商 <span class="arrow">↑</span></button>
     </div>
     <div class="chart-section">
       <div class="chart-header">
