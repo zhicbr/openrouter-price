@@ -529,7 +529,7 @@
 
     .grid-header {
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr 160px;
       gap: 8px;
       padding: 8px 12px;
       font-size: 11px;
@@ -548,7 +548,7 @@
 
     .model-row {
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr 160px;
       gap: 8px;
       padding: 10px 12px;
       border-radius: 8px;
@@ -893,6 +893,7 @@
     let allModels = [];
     let filteredModels = [];
     let compareModels = [];
+    let refModelId = 'deepseek/deepseek-r1';
     let currency = 'CNY';
     let cnyRate = 7.1;
     let selectedProviders = new Set();
@@ -1182,12 +1183,16 @@
       const min = prices.length ? Math.min(...prices) : 0;
       const max = prices.length ? Math.max(...prices) : 0;
       const sym = currency === 'CNY' ? '¥' : '$';
+      const refModel = allModels.find(m => m.id === refModelId);
+      const refName = refModel ? refModel.name : '未设置';
+
       document.getElementById('statsBar').innerHTML = `
     <div class="stat"><div class="stat-val purple">${filteredModels.length}</div><div class="stat-label">模型总数</div></div>
     <div class="stat"><div class="stat-val green">${free}</div><div class="stat-label">免费模型</div></div>
     <div class="stat"><div class="stat-val">${Object.keys(Object.fromEntries(filteredModels.map(m => [m.provider, 1]))).length}</div><div class="stat-label">供应商数</div></div>
-    <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${min.toFixed(4)}<span style="font-size:10px;color:var(--text3);margin-left:2px">/1M</span></div><div class="stat-label">最低输入价</div></div>
-    <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${max.toFixed(2)}<span style="font-size:10px;color:var(--text3);margin-left:2px">/1M</span></div><div class="stat-label">最高输入价</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${min.toFixed(4)}<span style="font-size:10px;color:var(--text3);margin-left:2px">/1M</span></div><div class="stat-label">最低价</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${max.toFixed(2)}<span style="font-size:10px;color:var(--text3);margin-left:2px">/1M</span></div><div class="stat-label">最高价</div></div>
+    <div class="stat" style="border-left:1px solid var(--border);padding-left:16px"><div class="stat-val" style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;" title="${refName}">${refName}</div><div class="stat-label">当前参考模型</div></div>
   `;
     }
 
@@ -1329,6 +1334,39 @@
         ctx.fillText(shortName, 0, 0);
         ctx.restore();
       });
+
+      // Draw active Reference Lines
+      const refModel = allModels.find(m => m.id === refModelId);
+      if (refModel && !isFree(refModel)) {
+        const refInput = priceNum(refModel.pricing.prompt);
+        const refOutput = priceNum(refModel.pricing.completion);
+        
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 2]); // slight dash to distinguish from grid, but looks very solid
+
+        if (refInput > 0) {
+          const iy = topPad + scaleY(refInput);
+          if (iy >= topPad && iy <= topPad + plotH) {
+            ctx.beginPath();
+            ctx.moveTo(leftPad, iy);
+            ctx.lineTo(totalW - rightPad, iy);
+            ctx.strokeStyle = 'rgba(124,111,255,0.9)'; // strong input color
+            ctx.stroke();
+          }
+        }
+
+        if (refOutput > 0) {
+          const oy = topPad + scaleY(refOutput);
+          if (oy >= topPad && oy <= topPad + plotH) {
+            ctx.beginPath();
+            ctx.moveTo(leftPad, oy);
+            ctx.lineTo(totalW - rightPad, oy);
+            ctx.strokeStyle = 'rgba(255,107,157,0.9)'; // strong output color
+            ctx.stroke();
+          }
+        }
+        ctx.setLineDash([]); // reset stroke style
+      }
     }
 
     function renderModelRows() {
@@ -1356,11 +1394,18 @@
       <div class="price-cell ${free ? 'price-free' : 'price-output'}">${op}</div>
       <div class="price-cell" style="color:var(--text3)">${cr === 'Free' ? '-' : cr}</div>
       <div class="context-cell">${formatCtx(m.context_length)}</div>
-      <div style="text-align:right">
-        <button class="compare-btn ${inCompare ? 'added' : ''}" onclick="addToCompare(event,'${m.id}')">${inCompare ? '✓ 已添加' : '+ 比较'}</button>
+      <div style="text-align:right;display:flex;gap:4px;justify-content:flex-end">
+        <button class="compare-btn" style="padding:4px 8px;font-size:11px;${refModelId === m.id ? 'background:var(--accent);color:white;border-color:var(--accent);' : ''}" onclick="setReferenceModel(event,'${m.id}')">${refModelId === m.id ? '★ 参考中' : '设为参考'}</button>
+        <button class="compare-btn ${inCompare ? 'added' : ''}" style="padding:4px 8px;font-size:11px" onclick="addToCompare(event,'${m.id}')">${inCompare ? '✓ 已比较' : '+ 比较'}</button>
       </div>
     </div>`;
       }).join('');
+    }
+
+    function setReferenceModel(e, id) {
+      e.stopPropagation();
+      refModelId = id;
+      renderAll(); // Re-render stats, charts, and rows to reflect new reference
     }
 
     const MODEL_TOOLTIP_CACHE = {};
