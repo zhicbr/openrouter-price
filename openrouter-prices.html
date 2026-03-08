@@ -853,8 +853,15 @@
           <div class="scale-opt" id="scaleLog" onclick="setScale('log')">
             <div class="scale-radio"></div>对数 (Log) — 推荐
           </div>
-          <div class="scale-opt" id="scaleTop20" onclick="setScale('top20')">
-            <div class="scale-radio"></div>仅显示 Top 20
+          <div class="scale-opt" id="scaleTopN" onclick="setScale('topN')">
+            <div class="scale-radio"></div>显示前 N 个
+          </div>
+          <div id="topNControls" style="display:none;padding:4px 0 0 20px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+              <input type="range" id="topNSlider" min="1" max="100" value="20" style="flex:1;accent-color:var(--accent);" oninput="updateTopN(this.value)">
+              <span id="topNLabel" style="font-size:11px;color:var(--text);min-width:28px;text-align:right;">20</span>
+            </div>
+            <button id="topNInvertBtn" style="width:100%;padding:4px 0;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;" onclick="toggleTopNInvert()">反选（剔除前 N 个）</button>
           </div>
         </div>
       </div>
@@ -891,6 +898,8 @@
     let selectedProviders = new Set();
     let allProviders = [];
     let scaleMode = 'linear';
+    let topNCount = 20;
+    let topNInvert = false;
     let sortBy = 'input';
     let sortDir = -1;
     let chartInstance = null;
@@ -1059,8 +1068,31 @@
 
     function setScale(mode) {
       scaleMode = mode;
-      ['linear', 'log', 'top20'].forEach(s => document.getElementById('scale' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.remove('active'));
+      ['linear', 'log', 'topN'].forEach(s => document.getElementById('scale' + s.charAt(0).toUpperCase() + s.slice(1))?.classList.remove('active'));
       document.getElementById('scale' + mode.charAt(0).toUpperCase() + mode.slice(1))?.classList.add('active');
+      const controls = document.getElementById('topNControls');
+      if (controls) controls.style.display = mode === 'topN' ? 'block' : 'none';
+      renderChart();
+    }
+
+    function updateTopN(val) {
+      topNCount = parseInt(val);
+      document.getElementById('topNLabel').textContent = val;
+      renderChart();
+    }
+
+    function toggleTopNInvert() {
+      topNInvert = !topNInvert;
+      const btn = document.getElementById('topNInvertBtn');
+      if (topNInvert) {
+        btn.textContent = '取消反选（显示前 N 个）';
+        btn.style.borderColor = 'var(--accent)';
+        btn.style.color = 'var(--accent)';
+      } else {
+        btn.textContent = '反选（剔除前 N 个）';
+        btn.style.borderColor = 'var(--border)';
+        btn.style.color = 'var(--text2)';
+      }
       renderChart();
     }
 
@@ -1164,11 +1196,16 @@
       if (!canvas) return;
 
       let models = filteredModels.filter(m => !isFree(m));
-      if (scaleMode === 'top20') {
-        models = [...models].sort((a, b) => priceNum(b.pricing.prompt) - priceNum(a.pricing.prompt)).slice(0, 20);
+      if (scaleMode === 'topN') {
+        const sorted = [...models].sort((a, b) => priceNum(b.pricing.prompt) - priceNum(a.pricing.prompt));
+        if (topNInvert) {
+          models = sorted.slice(topNCount);
+        } else {
+          models = sorted.slice(0, topNCount);
+        }
       }
 
-      const freeModels = filteredModels.filter(isFree);
+      const freeModels = (scaleMode === 'topN' && !topNInvert) ? [] : filteredModels.filter(isFree);
       const allDisplay = [...models, ...freeModels];
 
       if (!allDisplay.length) {
