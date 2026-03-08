@@ -1,0 +1,1218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OpenRouter 模型价格比较</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --bg2: #111118;
+    --bg3: #1a1a24;
+    --bg4: #22222f;
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.14);
+    --text: #e8e8f0;
+    --text2: #9898b0;
+    --text3: #5a5a70;
+    --accent: #7c6fff;
+    --accent2: #ff6b9d;
+    --green: #3dffa0;
+    --input-color: #7c6fff;
+    --output-color: #ff6b9d;
+    --free-color: #3dffa0;
+    --glow: rgba(124,111,255,0.15);
+  }
+  [data-theme="light"] {
+    --bg: #f4f4f8;
+    --bg2: #ffffff;
+    --bg3: #ebebf3;
+    --bg4: #e0e0ea;
+    --border: rgba(0,0,0,0.08);
+    --border2: rgba(0,0,0,0.14);
+    --text: #18181f;
+    --text2: #5a5a70;
+    --text3: #9898b0;
+    --glow: rgba(124,111,255,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'JetBrains Mono', monospace;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+  }
+
+  /* Header */
+  .header {
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    backdrop-filter: blur(20px);
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+    animation: pulse 2s infinite;
+  }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.6;transform:scale(0.8)} }
+
+  .header-right { display: flex; align-items: center; gap: 12px; }
+
+  .rate-badge {
+    font-size: 11px;
+    color: var(--text2);
+    padding: 4px 10px;
+    border: 1px solid var(--border2);
+    border-radius: 20px;
+    background: var(--bg3);
+  }
+  .rate-badge span { color: var(--green); font-weight: 500; }
+
+  .currency-toggle {
+    display: flex;
+    background: var(--bg3);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .currency-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    background: none;
+    border: none;
+    color: var(--text2);
+    transition: all 0.2s;
+  }
+  .currency-btn.active { background: var(--accent); color: white; }
+
+  .theme-btn {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    border: 1px solid var(--border2);
+    background: var(--bg3);
+    color: var(--text);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+    transition: all 0.2s;
+  }
+  .theme-btn:hover { border-color: var(--accent); }
+
+  /* Main layout */
+  .main { display: flex; height: calc(100vh - 65px); }
+
+  /* Sidebar */
+  .sidebar {
+    width: 280px;
+    min-width: 280px;
+    border-right: 1px solid var(--border);
+    background: var(--bg2);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-section {
+    padding: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 10px;
+  }
+
+  .search-box {
+    width: 100%;
+    padding: 8px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .search-box:focus { border-color: var(--accent); }
+  .search-box::placeholder { color: var(--text3); }
+
+  .provider-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .provider-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.15s;
+    user-select: none;
+  }
+  .provider-item:hover { background: var(--bg3); }
+  .provider-item.active { background: var(--bg3); }
+
+  .provider-check {
+    width: 14px; height: 14px;
+    border-radius: 3px;
+    border: 1px solid var(--border2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .provider-item.active .provider-check {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .provider-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .provider-name { font-size: 12px; color: var(--text); flex: 1; }
+  .provider-count {
+    font-size: 10px;
+    color: var(--text3);
+    background: var(--bg4);
+    padding: 1px 5px;
+    border-radius: 10px;
+  }
+
+  /* Scale mode */
+  .scale-options { display: flex; flex-direction: column; gap: 6px; }
+  .scale-opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 12px;
+    color: var(--text2);
+    transition: all 0.15s;
+  }
+  .scale-opt:hover { background: var(--bg3); color: var(--text); }
+  .scale-opt.active { background: var(--bg3); color: var(--accent); }
+  .scale-radio {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    border: 2px solid var(--border2);
+    transition: all 0.15s;
+    flex-shrink: 0;
+  }
+  .scale-opt.active .scale-radio { border-color: var(--accent); background: var(--accent); }
+
+  /* Compare panel */
+  .compare-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .compare-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px;
+    background: var(--bg3);
+    border-radius: 6px;
+    font-size: 11px;
+    color: var(--text2);
+    animation: slideIn 0.2s ease;
+  }
+  @keyframes slideIn { from{opacity:0;transform:translateX(-8px)} to{opacity:1;transform:translateX(0)} }
+
+  .compare-item-name { flex: 1; color: var(--text); font-size: 10px; line-height: 1.3; }
+  .compare-remove {
+    width: 18px; height: 18px;
+    border-radius: 4px;
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .compare-remove:hover { background: rgba(255,100,100,0.2); color: #ff6464; }
+
+  .compare-empty {
+    text-align: center;
+    color: var(--text3);
+    font-size: 11px;
+    padding: 20px;
+    line-height: 1.8;
+  }
+
+  /* Content area */
+  .content {
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Stats bar */
+  .stats-bar {
+    padding: 12px 24px;
+    display: flex;
+    gap: 24px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+
+  .stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .stat-val {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'Syne', sans-serif;
+    color: var(--text);
+  }
+  .stat-val.green { color: var(--green); }
+  .stat-val.purple { color: var(--accent); }
+  .stat-label { font-size: 10px; color: var(--text3); }
+
+  /* Chart container */
+  .chart-section {
+    padding: 24px;
+    flex-shrink: 0;
+  }
+
+  .chart-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+
+  .chart-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .legend {
+    display: flex;
+    gap: 16px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text2);
+  }
+  .legend-dot { width: 8px; height: 8px; border-radius: 2px; }
+
+  /* Chart scroll wrapper */
+  .chart-scroll {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .chart-canvas-wrap {
+    position: relative;
+    min-height: 280px;
+  }
+
+  #mainChart {
+    display: block;
+  }
+
+  /* Compare line chart */
+  .line-chart-section {
+    padding: 0 24px 24px;
+    flex-shrink: 0;
+    display: none;
+  }
+  .line-chart-section.visible { display: block; }
+
+  .line-chart-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  #lineChart { width: 100%; height: 200px; }
+
+  /* Model grid */
+  .model-grid {
+    padding: 0 24px 24px;
+    flex: 1;
+  }
+
+  .grid-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 10px;
+    color: var(--text3);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  .model-rows { display: flex; flex-direction: column; gap: 2px; }
+
+  .model-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 1fr 100px;
+    gap: 8px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    align-items: center;
+    animation: fadeRow 0.3s ease backwards;
+  }
+  @keyframes fadeRow { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+  .model-row:hover {
+    background: var(--bg2);
+    border-color: var(--border);
+  }
+  .model-row.selected {
+    background: var(--bg3);
+    border-color: var(--accent);
+  }
+  .model-row.free-model { border-left: 2px solid var(--free-color); }
+
+  .model-name-cell { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+  .model-provider-badge {
+    font-size: 9px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    flex-shrink: 0;
+  }
+
+  .model-name {
+    font-size: 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .price-cell {
+    font-size: 11px;
+    font-family: 'JetBrains Mono', monospace;
+    text-align: right;
+  }
+  .price-input { color: var(--input-color); }
+  .price-output { color: var(--output-color); }
+  .price-free { color: var(--free-color); font-weight: 600; }
+
+  .context-cell {
+    font-size: 10px;
+    color: var(--text3);
+    text-align: right;
+  }
+
+  .compare-btn {
+    padding: 5px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .compare-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .compare-btn.added { background: rgba(124,111,255,0.15); border-color: var(--accent); color: var(--accent); }
+
+  /* Tooltip */
+  .tooltip {
+    position: fixed;
+    z-index: 1000;
+    background: var(--bg4);
+    border: 1px solid var(--border2);
+    border-radius: 10px;
+    padding: 12px 14px;
+    font-size: 11px;
+    line-height: 1.8;
+    color: var(--text2);
+    max-width: 280px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .tooltip.visible { opacity: 1; }
+  .tooltip-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+  .tooltip-row { display: flex; justify-content: space-between; gap: 16px; }
+  .tooltip-val { color: var(--text); }
+  .tooltip-desc {
+    margin-top: 8px;
+    font-size: 10px;
+    color: var(--text3);
+    line-height: 1.6;
+    border-top: 1px solid var(--border);
+    padding-top: 8px;
+    max-height: 80px;
+    overflow: hidden;
+  }
+
+  /* Loading */
+  .loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    gap: 16px;
+    color: var(--text3);
+    font-size: 12px;
+  }
+
+  .spinner {
+    width: 40px; height: 40px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; height: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg4); border-radius: 2px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+  /* Sort controls */
+  .sort-bar {
+    padding: 8px 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    flex-wrap: wrap;
+  }
+
+  .sort-label { font-size: 10px; color: var(--text3); }
+
+  .sort-btn {
+    padding: 4px 10px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text2);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .sort-btn:hover, .sort-btn.active { background: var(--bg4); border-color: var(--accent); color: var(--accent); }
+
+  .sort-btn .arrow { margin-left: 4px; opacity: 0.5; }
+  .sort-btn.active .arrow { opacity: 1; }
+
+  /* No results */
+  .no-results {
+    text-align: center;
+    color: var(--text3);
+    padding: 40px;
+    font-size: 12px;
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-dot"></div>
+    OpenRouter Prices
+  </div>
+  <div class="header-right">
+    <div class="rate-badge" id="rateDisplay">汇率加载中...</div>
+    <div class="currency-toggle">
+      <button class="currency-btn active" id="btnUSD" onclick="setCurrency('USD')">USD</button>
+      <button class="currency-btn" id="btnCNY" onclick="setCurrency('CNY')">CNY</button>
+    </div>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+  </div>
+</header>
+
+<div class="main">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="sidebar-section">
+      <div class="section-label">搜索模型</div>
+      <input class="search-box" type="text" id="searchInput" placeholder="输入模型名称筛选..." oninput="applyFilters()">
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">供应商</div>
+      <div class="provider-list" id="providerList"></div>
+    </div>
+
+    <div class="sidebar-section">
+      <div class="section-label">坐标轴</div>
+      <div class="scale-options">
+        <div class="scale-opt active" id="scaleLinear" onclick="setScale('linear')">
+          <div class="scale-radio"></div>线性 (Linear)
+        </div>
+        <div class="scale-opt" id="scaleLog" onclick="setScale('log')">
+          <div class="scale-radio"></div>对数 (Log) — 推荐
+        </div>
+        <div class="scale-opt" id="scaleTop20" onclick="setScale('top20')">
+          <div class="scale-radio"></div>仅显示 Top 20
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar-section" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div class="section-label">比价列表 <span id="compareCount" style="color:var(--accent)">0</span>/8</div>
+      <div class="compare-list" id="compareList">
+        <div class="compare-empty">点击模型行末的<br>+ 比较 按钮添加</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Content -->
+  <main class="content" id="mainContent">
+    <div class="loading" id="loadingEl">
+      <div class="spinner"></div>
+      正在加载模型数据...
+    </div>
+  </main>
+</div>
+
+<!-- Tooltip -->
+<div class="tooltip" id="tooltip">
+  <div class="tooltip-title" id="ttTitle"></div>
+  <div id="ttBody"></div>
+</div>
+
+<script>
+let allModels = [];
+let filteredModels = [];
+let compareModels = [];
+let currency = 'USD';
+let cnyRate = 7.1;
+let selectedProviders = new Set();
+let allProviders = [];
+let scaleMode = 'linear';
+let sortBy = 'provider';
+let sortDir = 1;
+let chartInstance = null;
+let lineChartInstance = null;
+
+// Provider colors
+const PROVIDER_COLORS = {
+  openai: '#10a37f',
+  anthropic: '#d97706',
+  google: '#4285f4',
+  meta: '#1877f2',
+  mistralai: '#ff6b35',
+  deepseek: '#8b5cf6',
+  microsoft: '#0078d4',
+  amazon: '#ff9900',
+  cohere: '#39d353',
+  xai: '#1da1f2',
+  '01-ai': '#e91e8c',
+  qwen: '#1677ff',
+  nvidia: '#76b900',
+  perplexity: '#20808d',
+  default: '#9898b0'
+};
+
+function getProviderColor(provider) {
+  return PROVIDER_COLORS[provider.toLowerCase()] || PROVIDER_COLORS.default;
+}
+
+function extractProvider(id) {
+  return id.split('/')[0] || 'unknown';
+}
+
+function isFree(model) {
+  const p = model.pricing;
+  return parseFloat(p.prompt||0) === 0 && parseFloat(p.completion||0) === 0;
+}
+
+function formatPrice(val, perTokens = 1000000) {
+  const n = parseFloat(val || 0) * perTokens;
+  if (n === 0) return 'Free';
+  if (currency === 'CNY') {
+    const cn = n * cnyRate;
+    if (cn < 0.0001) return '¥' + (cn * 1000).toFixed(4) + '/B';
+    if (cn < 0.1) return '¥' + cn.toFixed(4);
+    return '¥' + cn.toFixed(3);
+  } else {
+    if (n < 0.0001) return '$' + (n * 1000).toFixed(4) + '/B';
+    if (n < 0.1) return '$' + n.toFixed(4);
+    return '$' + n.toFixed(3);
+  }
+}
+
+function priceNum(val, perTokens = 1000000) {
+  const n = parseFloat(val || 0) * perTokens;
+  return currency === 'CNY' ? n * cnyRate : n;
+}
+
+function formatCtx(n) {
+  if (!n) return '-';
+  if (n >= 1000000) return (n/1000000).toFixed(0)+'M';
+  if (n >= 1000) return (n/1000).toFixed(0)+'K';
+  return n;
+}
+
+function formatK(n) { return n >= 1000 ? (n/1000).toFixed(0)+'K' : n; }
+
+async function loadRate() {
+  try {
+    const r = await fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=CNY');
+    const d = await r.json();
+    cnyRate = d.rates.CNY;
+    document.getElementById('rateDisplay').innerHTML = `USD/CNY <span>${cnyRate.toFixed(4)}</span>`;
+  } catch(e) {
+    document.getElementById('rateDisplay').innerHTML = `USD/CNY <span>${cnyRate}</span>`;
+  }
+}
+
+async function loadModels() {
+  try {
+    const r = await fetch('https://openrouter.ai/api/v1/models');
+    const d = await r.json();
+    allModels = d.data.map(m => ({ ...m, provider: extractProvider(m.id) }));
+    processProviders();
+    applyFilters();
+  } catch(e) {
+    document.getElementById('mainContent').innerHTML = '<div class="loading">加载失败，请刷新重试</div>';
+  }
+}
+
+function processProviders() {
+  const counts = {};
+  allModels.forEach(m => {
+    counts[m.provider] = (counts[m.provider] || 0) + 1;
+  });
+  allProviders = Object.entries(counts).sort((a,b) => b[1]-a[1]).map(([p,c]) => ({name:p,count:c}));
+  selectedProviders = new Set(allProviders.map(p => p.name));
+  renderProviderList();
+}
+
+function renderProviderList() {
+  const el = document.getElementById('providerList');
+  el.innerHTML = allProviders.map(p => `
+    <div class="provider-item ${selectedProviders.has(p.name)?'active':''}" onclick="toggleProvider('${p.name}')">
+      <div class="provider-check">${selectedProviders.has(p.name)?'✓':''}</div>
+      <div class="provider-dot" style="background:${getProviderColor(p.name)}"></div>
+      <div class="provider-name">${p.name}</div>
+      <div class="provider-count">${p.count}</div>
+    </div>
+  `).join('');
+}
+
+function toggleProvider(name) {
+  if (selectedProviders.has(name)) selectedProviders.delete(name);
+  else selectedProviders.add(name);
+  renderProviderList();
+  applyFilters();
+}
+
+function applyFilters() {
+  const q = (document.getElementById('searchInput')?.value || '').toLowerCase();
+  filteredModels = allModels.filter(m =>
+    selectedProviders.has(m.provider) &&
+    (m.name.toLowerCase().includes(q) || m.id.toLowerCase().includes(q))
+  );
+  // Sort
+  filteredModels.sort((a, b) => {
+    if (sortBy === 'provider') return a.provider.localeCompare(b.provider) * sortDir;
+    if (sortBy === 'input') return (priceNum(a.pricing.prompt) - priceNum(b.pricing.prompt)) * sortDir;
+    if (sortBy === 'output') return (priceNum(a.pricing.completion) - priceNum(b.pricing.completion)) * sortDir;
+    if (sortBy === 'context') return ((a.context_length||0) - (b.context_length||0)) * sortDir;
+    return 0;
+  });
+  renderAll();
+}
+
+function setSort(by) {
+  if (sortBy === by) sortDir *= -1;
+  else { sortBy = by; sortDir = -1; }
+  applyFilters();
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  const btn = document.getElementById('sort_'+by);
+  if (btn) { btn.classList.add('active'); btn.querySelector('.arrow').textContent = sortDir === 1 ? '↑' : '↓'; }
+}
+
+function setScale(mode) {
+  scaleMode = mode;
+  ['linear','log','top20'].forEach(s => document.getElementById('scale'+s.charAt(0).toUpperCase()+s.slice(1))?.classList.remove('active'));
+  document.getElementById('scale'+mode.charAt(0).toUpperCase()+mode.slice(1))?.classList.add('active');
+  renderChart();
+}
+
+function setCurrency(c) {
+  currency = c;
+  document.getElementById('btnUSD').classList.toggle('active', c === 'USD');
+  document.getElementById('btnCNY').classList.toggle('active', c === 'CNY');
+  renderAll();
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = !html.hasAttribute('data-theme') || html.getAttribute('data-theme') === 'dark';
+  html.setAttribute('data-theme', isDark ? 'light' : 'dark');
+  document.getElementById('themeBtn').textContent = isDark ? '☀️' : '🌙';
+}
+
+function renderAll() {
+  const el = document.getElementById('mainContent');
+  if (!filteredModels.length) {
+    el.innerHTML = '<div class="no-results">无匹配模型</div>';
+    return;
+  }
+  el.innerHTML = `
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="sort-bar">
+      <span class="sort-label">排序：</span>
+      <button class="sort-btn active" id="sort_provider" onclick="setSort('provider')">供应商 <span class="arrow">↑</span></button>
+      <button class="sort-btn" id="sort_input" onclick="setSort('input')">输入价格 <span class="arrow">↓</span></button>
+      <button class="sort-btn" id="sort_output" onclick="setSort('output')">输出价格 <span class="arrow">↓</span></button>
+      <button class="sort-btn" id="sort_context" onclick="setSort('context')">上下文 <span class="arrow">↓</span></button>
+    </div>
+    <div class="chart-section">
+      <div class="chart-header">
+        <div class="chart-title">价格分布图 <span style="color:var(--text3);font-weight:400;font-size:11px">(每百万 tokens)</span></div>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--input-color)"></div>输入 Input</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--output-color)"></div>输出 Output</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--free-color)"></div>免费 Free</div>
+        </div>
+      </div>
+      <div class="chart-scroll"><div class="chart-canvas-wrap"><canvas id="mainChart"></canvas></div></div>
+    </div>
+    <div class="line-chart-section" id="lineChartSection">
+      <div class="line-chart-box">
+        <div class="chart-header">
+          <div class="chart-title">比价对比</div>
+        </div>
+        <canvas id="lineChart"></canvas>
+      </div>
+    </div>
+    <div class="model-grid">
+      <div class="grid-header">
+        <div>模型</div>
+        <div style="text-align:right">输入价格</div>
+        <div style="text-align:right">输出价格</div>
+        <div style="text-align:right">缓存读取</div>
+        <div style="text-align:right">上下文</div>
+        <div style="text-align:right">操作</div>
+      </div>
+      <div class="model-rows" id="modelRows"></div>
+    </div>
+  `;
+  renderStats();
+  renderChart();
+  renderModelRows();
+  renderCompareChart();
+}
+
+function renderStats() {
+  const free = filteredModels.filter(isFree).length;
+  const paid = filteredModels.filter(m => !isFree(m));
+  const prices = paid.map(m => priceNum(m.pricing.prompt));
+  const min = prices.length ? Math.min(...prices) : 0;
+  const max = prices.length ? Math.max(...prices) : 0;
+  const sym = currency === 'CNY' ? '¥' : '$';
+  document.getElementById('statsBar').innerHTML = `
+    <div class="stat"><div class="stat-val purple">${filteredModels.length}</div><div class="stat-label">模型总数</div></div>
+    <div class="stat"><div class="stat-val green">${free}</div><div class="stat-label">免费模型</div></div>
+    <div class="stat"><div class="stat-val">${Object.keys(Object.fromEntries(filteredModels.map(m=>[m.provider,1]))).length}</div><div class="stat-label">供应商数</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${min.toFixed(4)}</div><div class="stat-label">最低输入价</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${max.toFixed(2)}</div><div class="stat-label">最高输入价</div></div>
+  `;
+}
+
+function renderChart() {
+  const canvas = document.getElementById('mainChart');
+  if (!canvas) return;
+
+  let models = filteredModels.filter(m => !isFree(m));
+  if (scaleMode === 'top20') {
+    models = [...models].sort((a,b) => priceNum(b.pricing.prompt) - priceNum(a.pricing.prompt)).slice(0, 20);
+  }
+
+  const freeModels = filteredModels.filter(isFree);
+  const allDisplay = [...models, ...freeModels];
+
+  if (!allDisplay.length) return;
+
+  const barW = 28, gap = 6, leftPad = 60, bottomPad = 80, topPad = 20, rightPad = 20;
+  const totalW = Math.max(leftPad + rightPad + allDisplay.length * (barW + gap), 800);
+  const chartH = 280;
+
+  canvas.width = totalW;
+  canvas.height = chartH;
+  canvas.style.width = totalW + 'px';
+  canvas.style.height = chartH + 'px';
+
+  const ctx = canvas.getContext('2d');
+  const isDark = !document.documentElement.getAttribute('data-theme') || document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDark ? '#5a5a70' : '#9898b0';
+  const gridColor = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.06)';
+
+  ctx.clearRect(0, 0, totalW, chartH);
+
+  const plotH = chartH - topPad - bottomPad;
+
+  // Compute value range
+  const vals = models.map(m => Math.max(priceNum(m.pricing.prompt), priceNum(m.pricing.completion)));
+  const maxVal = vals.length ? Math.max(...vals) : 1;
+
+  // Scale function
+  function scaleY(val) {
+    if (scaleMode === 'log' && val > 0) {
+      const logMax = Math.log10(maxVal + 1);
+      const logMin = Math.log10(0.001);
+      const range = logMax - logMin;
+      return plotH - ((Math.log10(val + 0.001) - logMin) / range) * plotH;
+    }
+    return val > 0 ? plotH - (val / maxVal) * plotH : plotH;
+  }
+
+  // Grid lines
+  const gridCount = 5;
+  ctx.font = '9px JetBrains Mono';
+  ctx.fillStyle = textColor;
+  ctx.textAlign = 'right';
+
+  for (let i = 0; i <= gridCount; i++) {
+    const frac = i / gridCount;
+    let gridVal;
+    if (scaleMode === 'log') {
+      const logMax = Math.log10(maxVal + 1);
+      const logMin = Math.log10(0.001);
+      gridVal = Math.pow(10, logMin + frac * (logMax - logMin)) - 0.001;
+    } else {
+      gridVal = maxVal * frac;
+    }
+    const y = topPad + plotH - (scaleMode === 'log' ? (frac * plotH) : (gridVal / maxVal) * plotH);
+    ctx.strokeStyle = gridColor;
+    ctx.lineWidth = 1;
+    ctx.setLineDash([3,3]);
+    ctx.beginPath();
+    ctx.moveTo(leftPad, y);
+    ctx.lineTo(totalW - rightPad, y);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    const sym = currency === 'CNY' ? '¥' : '$';
+    const label = gridVal < 0.001 ? '0' : sym + gridVal.toFixed(gridVal < 0.1 ? 4 : 2);
+    ctx.fillText(label, leftPad - 6, y + 3);
+  }
+
+  // Bars
+  allDisplay.forEach((m, i) => {
+    const x = leftPad + i * (barW + gap);
+    const free = isFree(m);
+    const inputVal = priceNum(m.pricing.prompt);
+    const outputVal = priceNum(m.pricing.completion);
+
+    if (free) {
+      const barH = 4;
+      const y = topPad + plotH - barH;
+      ctx.fillStyle = 'rgba(61,255,160,0.6)';
+      ctx.fillRect(x, y, barW/2 - 1, barH);
+      ctx.fillStyle = 'rgba(61,255,160,0.4)';
+      ctx.fillRect(x + barW/2 + 1, y, barW/2 - 1, barH);
+    } else {
+      // Input bar
+      const iy = topPad + scaleY(inputVal);
+      const iH = topPad + plotH - iy;
+      if (iH > 0) {
+        ctx.fillStyle = 'rgba(124,111,255,0.85)';
+        ctx.fillRect(x, iy, barW/2 - 1, iH);
+      }
+      // Output bar
+      const oy = topPad + scaleY(outputVal);
+      const oH = topPad + plotH - oy;
+      if (oH > 0) {
+        ctx.fillStyle = 'rgba(255,107,157,0.85)';
+        ctx.fillRect(x + barW/2 + 1, oy, barW/2 - 1, oH);
+      }
+    }
+
+    // Provider color accent (bottom)
+    ctx.fillStyle = getProviderColor(m.provider);
+    ctx.fillRect(x, topPad + plotH, barW, 2);
+
+    // X label (rotated)
+    ctx.save();
+    ctx.translate(x + barW/2, topPad + plotH + 10);
+    ctx.rotate(-Math.PI / 3);
+    ctx.font = '9px JetBrains Mono';
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'right';
+    const shortName = m.name.replace(/^[^:]+:\s*/, '').substring(0, 18);
+    ctx.fillText(shortName, 0, 0);
+    ctx.restore();
+  });
+}
+
+function renderModelRows() {
+  const container = document.getElementById('modelRows');
+  if (!container) return;
+
+  container.innerHTML = filteredModels.map((m, idx) => {
+    const free = isFree(m);
+    const inCompare = compareModels.some(c => c.id === m.id);
+    const ip = free ? 'Free' : formatPrice(m.pricing.prompt);
+    const op = free ? 'Free' : formatPrice(m.pricing.completion);
+    const cr = formatPrice(m.pricing.input_cache_read);
+    const pColor = getProviderColor(m.provider);
+
+    return `<div class="model-row ${free?'free-model':''} ${inCompare?'selected':''}"
+      style="animation-delay:${Math.min(idx*10,300)}ms"
+      onmouseenter="showTooltip(event,'${m.id}')"
+      onmouseleave="hideTooltip()"
+      onclick="toggleRow(event,'${m.id}')">
+      <div class="model-name-cell">
+        <div class="model-provider-badge" style="background:${pColor}22;color:${pColor}">${m.provider}</div>
+        <div class="model-name" title="${m.name}">${m.name}</div>
+      </div>
+      <div class="price-cell ${free?'price-free':'price-input'}">${ip}</div>
+      <div class="price-cell ${free?'price-free':'price-output'}">${op}</div>
+      <div class="price-cell" style="color:var(--text3)">${cr === 'Free' ? '-' : cr}</div>
+      <div class="context-cell">${formatCtx(m.context_length)}</div>
+      <div style="text-align:right">
+        <button class="compare-btn ${inCompare?'added':''}" onclick="addToCompare(event,'${m.id}')">${inCompare?'✓ 已添加':'+ 比较'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+const MODEL_TOOLTIP_CACHE = {};
+
+function showTooltip(e, id) {
+  const m = allModels.find(x => x.id === id);
+  if (!m) return;
+  const tt = document.getElementById('tooltip');
+  const free = isFree(m);
+
+  document.getElementById('ttTitle').textContent = m.name;
+  const sym = currency === 'CNY' ? '¥' : '$';
+  document.getElementById('ttBody').innerHTML = `
+    <div class="tooltip-row"><span>输入</span><span class="tooltip-val" style="color:var(--input-color)">${free?'Free':formatPrice(m.pricing.prompt)}/1M</span></div>
+    <div class="tooltip-row"><span>输出</span><span class="tooltip-val" style="color:var(--output-color)">${free?'Free':formatPrice(m.pricing.completion)}/1M</span></div>
+    ${m.pricing.input_cache_read && parseFloat(m.pricing.input_cache_read)>0 ? `<div class="tooltip-row"><span>缓存读</span><span class="tooltip-val">${formatPrice(m.pricing.input_cache_read)}/1M</span></div>` : ''}
+    ${m.pricing.web_search && parseFloat(m.pricing.web_search)>0 ? `<div class="tooltip-row"><span>联网搜索</span><span class="tooltip-val">${formatPrice(m.pricing.web_search,1)}/次</span></div>` : ''}
+    <div class="tooltip-row"><span>上下文</span><span class="tooltip-val">${formatCtx(m.context_length)}</span></div>
+    <div class="tooltip-row"><span>模态</span><span class="tooltip-val" style="font-size:10px">${m.architecture?.modality||'-'}</span></div>
+    <div class="tooltip-desc">${(m.description||'').substring(0,120)}${m.description?.length>120?'...':''}</div>
+  `;
+
+  tt.classList.add('visible');
+  moveTooltip(e);
+}
+
+function moveTooltip(e) {
+  const tt = document.getElementById('tooltip');
+  let x = e.clientX + 16, y = e.clientY - 10;
+  const rect = tt.getBoundingClientRect();
+  if (x + 300 > window.innerWidth) x = e.clientX - 300;
+  if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - 10;
+  tt.style.left = x + 'px';
+  tt.style.top = y + 'px';
+}
+
+document.addEventListener('mousemove', e => {
+  const tt = document.getElementById('tooltip');
+  if (tt.classList.contains('visible')) moveTooltip(e);
+});
+
+function hideTooltip() {
+  document.getElementById('tooltip').classList.remove('visible');
+}
+
+function addToCompare(e, id) {
+  e.stopPropagation();
+  const m = allModels.find(x => x.id === id);
+  if (!m) return;
+  if (compareModels.some(c => c.id === id)) {
+    compareModels = compareModels.filter(c => c.id !== id);
+  } else {
+    if (compareModels.length >= 8) return;
+    compareModels.push(m);
+  }
+  renderCompareList();
+  renderModelRows();
+  renderCompareChart();
+}
+
+function toggleRow(e, id) {
+  // Only expand info on row click (not compare btn)
+}
+
+function renderCompareList() {
+  const el = document.getElementById('compareList');
+  const countEl = document.getElementById('compareCount');
+  if (countEl) countEl.textContent = compareModels.length;
+
+  if (!compareModels.length) {
+    el.innerHTML = '<div class="compare-empty">点击模型行末的<br>+ 比较 按钮添加</div>';
+    return;
+  }
+
+  el.innerHTML = compareModels.map(m => `
+    <div class="compare-item">
+      <div class="compare-item-name">${m.name}</div>
+      <button class="compare-remove" onclick="addToCompare(event,'${m.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function renderCompareChart() {
+  const section = document.getElementById('lineChartSection');
+  if (!section) return;
+
+  if (compareModels.length < 2) {
+    section.classList.remove('visible');
+    return;
+  }
+
+  section.classList.add('visible');
+  const canvas = document.getElementById('lineChart');
+  if (!canvas) return;
+
+  const W = canvas.parentElement.offsetWidth - 40;
+  const H = 200;
+  canvas.width = W;
+  canvas.height = H;
+
+  const ctx = canvas.getContext('2d');
+  const isDark = !document.documentElement.getAttribute('data-theme') || document.documentElement.getAttribute('data-theme') === 'dark';
+  const textColor = isDark ? '#5a5a70' : '#9898b0';
+  ctx.clearRect(0, 0, W, H);
+
+  const leftPad = 70, rightPad = 20, topPad = 20, bottomPad = 40;
+  const plotW = W - leftPad - rightPad;
+  const plotH = H - topPad - bottomPad;
+
+  // Data
+  const metrics = ['Input', 'Output'];
+  const metricKeys = ['prompt', 'completion'];
+  const vals = compareModels.map(m => metricKeys.map(k => priceNum(m.pricing[k])));
+  const allVals = vals.flat().filter(v => v > 0);
+  const maxV = allVals.length ? Math.max(...allVals) : 1;
+
+  // Grid
+  ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
+  ctx.setLineDash([3,3]);
+  for (let i = 0; i <= 4; i++) {
+    const y = topPad + plotH * (1 - i/4);
+    ctx.beginPath(); ctx.moveTo(leftPad, y); ctx.lineTo(W - rightPad, y); ctx.stroke();
+    ctx.font = '9px JetBrains Mono'; ctx.fillStyle = textColor; ctx.textAlign = 'right';
+    const v = maxV * i / 4;
+    ctx.fillText((currency==='CNY'?'¥':'$') + v.toFixed(v<0.01?4:2), leftPad - 4, y + 3);
+  }
+  ctx.setLineDash([]);
+
+  // Bars (grouped)
+  const barGroupW = plotW / compareModels.length;
+  const barW = Math.min(barGroupW * 0.35, 20);
+
+  compareModels.forEach((m, i) => {
+    const cx = leftPad + i * barGroupW + barGroupW / 2;
+
+    // Input bar
+    const iv = priceNum(m.pricing.prompt);
+    const iH = (iv / maxV) * plotH;
+    ctx.fillStyle = 'rgba(124,111,255,0.8)';
+    ctx.fillRect(cx - barW - 2, topPad + plotH - iH, barW, iH);
+
+    // Output bar
+    const ov = priceNum(m.pricing.completion);
+    const oH = (ov / maxV) * plotH;
+    ctx.fillStyle = 'rgba(255,107,157,0.8)';
+    ctx.fillRect(cx + 2, topPad + plotH - oH, barW, oH);
+
+    // Label
+    ctx.save();
+    ctx.translate(cx, topPad + plotH + 6);
+    ctx.rotate(-Math.PI / 4);
+    ctx.font = '9px JetBrains Mono';
+    ctx.fillStyle = textColor;
+    ctx.textAlign = 'right';
+    ctx.fillText(m.name.replace(/^[^:]+:\s*/,'').substring(0,20), 0, 0);
+    ctx.restore();
+  });
+}
+
+// Init
+(async () => {
+  await loadRate();
+  await loadModels();
+})();
+</script>
+</body>
+</html>
