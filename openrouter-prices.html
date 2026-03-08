@@ -967,7 +967,9 @@
       try {
         const r = await fetch('https://openrouter.ai/api/v1/models');
         const d = await r.json();
-        allModels = d.data.map(m => ({ ...m, provider: extractProvider(m.id) }));
+        allModels = d.data
+          .map(m => ({ ...m, provider: extractProvider(m.id) }))
+          .filter(m => parseFloat(m.pricing?.prompt || 0) >= 0 && parseFloat(m.pricing?.completion || 0) >= 0);
         processProviders();
         applyFilters();
       } catch (e) {
@@ -1123,7 +1125,7 @@
     function renderStats() {
       const free = filteredModels.filter(isFree).length;
       const paid = filteredModels.filter(m => !isFree(m));
-      const prices = paid.map(m => priceNum(m.pricing.prompt));
+      const prices = paid.map(m => priceNum(m.pricing.prompt)).filter(p => p > 0);
       const min = prices.length ? Math.min(...prices) : 0;
       const max = prices.length ? Math.max(...prices) : 0;
       const sym = currency === 'CNY' ? '¥' : '$';
