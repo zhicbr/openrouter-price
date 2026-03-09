@@ -1223,23 +1223,45 @@
         return;
       }
 
-      const barW = 28, gap = 6, leftPad = 60, bottomPad = 140, topPad = 20, rightPad = 20;
+      const barW = 28, gap = 6, leftPad = 60, topPad = 20, rightPad = 20;
+
+      // --- Dynamic bottomPad: measure all label texts first ---
+      const ctx = canvas.getContext('2d');
+      ctx.font = '11px JetBrains Mono';
+      const labelAngle = Math.PI / 3;  // 60 degrees
+      const sinA = Math.sin(labelAngle);
+      const cosA = Math.cos(labelAngle);
+
+      // Pre-compute short names for all items
+      const shortNames = allDisplay.map(m => m.name.replace(/^[^:]+:\s*/, '').substring(0, 30));
+
+      // Measure the max text width to determine required bottomPad
+      let maxTextW = 0;
+      shortNames.forEach(name => {
+        const w = ctx.measureText(name).width;
+        if (w > maxTextW) maxTextW = w;
+      });
+      // Rotated label vertical extent = textWidth * sin(angle), plus a small margin
+      const bottomPad = Math.ceil(maxTextW * sinA) + 20;
+
       const totalW = Math.max(leftPad + rightPad + allDisplay.length * (barW + gap), 800);
-      const chartH = 340;
+      const chartH = topPad + 200 + bottomPad; // 200 = minimum plot area height
+
+      // Ensure a reasonable plot area height (at least 200px, scale up if needed)
+      const minChartH = Math.max(chartH, 340);
 
       canvas.width = totalW;
-      canvas.height = chartH;
+      canvas.height = minChartH;
       canvas.style.width = totalW + 'px';
-      canvas.style.height = chartH + 'px';
+      canvas.style.height = minChartH + 'px';
 
-      const ctx = canvas.getContext('2d');
       const isDark = !document.documentElement.getAttribute('data-theme') || document.documentElement.getAttribute('data-theme') === 'dark';
       const textColor = isDark ? '#a0a0c0' : '#555570';
       const gridColor = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.10)';
 
-      ctx.clearRect(0, 0, totalW, chartH);
+      ctx.clearRect(0, 0, totalW, minChartH);
 
-      const plotH = chartH - topPad - bottomPad;
+      const plotH = minChartH - topPad - bottomPad;
 
       // Compute value range
       const vals = models.map(m => Math.max(priceNum(m.pricing.prompt), priceNum(m.pricing.completion)));
@@ -1330,8 +1352,7 @@
         ctx.font = '11px JetBrains Mono';
         ctx.fillStyle = textColor;
         ctx.textAlign = 'right';
-        const shortName = m.name.replace(/^[^:]+:\s*/, '').substring(0, 30);
-        ctx.fillText(shortName, 0, 0);
+        ctx.fillText(shortNames[i], 0, 0);
         ctx.restore();
       });
 
