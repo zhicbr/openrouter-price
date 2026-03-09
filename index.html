@@ -23,7 +23,7 @@
       --accent2: #ff6b9d;
       --green: #3dffa0;
       --input-color: #7c6fff;
-      --output-color: ff6b9d;
+      --output-color: #ff6b9d;
       --free-color: #3dffa0;
       --glow: rgba(124, 111, 255, 0.15);
     }
@@ -837,9 +837,15 @@
       <div class="sidebar-section">
         <div class="section-label">供应商</div>
         <div style="display:flex;gap:4px;margin-bottom:8px;">
-          <button style="flex:1;padding:4px 0;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;" onclick="selectAllProviders()">全选</button>
-          <button style="flex:1;padding:4px 0;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;" onclick="selectNoProviders()">全不选</button>
-          <button style="flex:1;padding:4px 0;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;" onclick="invertProviders()">反选</button>
+          <button
+            style="flex:1;padding:4px 0;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;"
+            onclick="selectAllProviders()">全选</button>
+          <button
+            style="flex:1;padding:4px 0;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;"
+            onclick="selectNoProviders()">全不选</button>
+          <button
+            style="flex:1;padding:4px 0;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;"
+            onclick="invertProviders()">反选</button>
         </div>
         <div class="provider-list" id="providerList"></div>
       </div>
@@ -858,16 +864,24 @@
           </div>
           <div id="topNControls" style="display:none;padding:4px 0 0 20px;">
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-              <input type="range" id="topNSlider" min="1" max="100" value="20" style="flex:1;accent-color:var(--accent);" oninput="updateTopN(this.value)">
+              <input type="range" id="topNSlider" min="1" max="100" value="20"
+                style="flex:1;accent-color:var(--accent);" oninput="updateTopN(this.value)">
               <span id="topNLabel" style="font-size:11px;color:var(--text);min-width:28px;text-align:right;">20</span>
             </div>
-            <button id="topNInvertBtn" style="width:100%;padding:4px 0;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;" onclick="toggleTopNInvert()">反选（剔除前 N 个）</button>
+            <button id="topNInvertBtn"
+              style="width:100%;padding:4px 0;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;"
+              onclick="toggleTopNInvert()">反选（剔除前 N 个）</button>
           </div>
         </div>
       </div>
 
       <div class="sidebar-section" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
-        <div class="section-label">比价列表 <span id="compareCount" style="color:var(--accent)">0</span>/8</div>
+        <div class="section-label" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>比价列表 <span id="compareCount" style="color:var(--accent)">0</span>/16</span>
+          <button
+            style="padding:2px 8px;font-size:10px;font-family:'JetBrains Mono',monospace;background:var(--bg3);border:1px solid var(--border);border-radius:6px;color:var(--text2);cursor:pointer;"
+            onclick="loadDefaultCompare()" title="加载预设的默认对比模型">默认对比</button>
+        </div>
         <div class="compare-list" id="compareList">
           <div class="compare-empty">点击模型行末的<br>+ 比较 按钮添加</div>
         </div>
@@ -905,6 +919,39 @@
     let sortDir = -1;
     let chartInstance = null;
     let lineChartInstance = null;
+
+    // ── Default compare preset ──
+    // 在此处维护默认对比模型列表（填入模型 ID）
+    const DEFAULT_COMPARE_MODELS = [
+      // DeepSeek
+      'deepseek/deepseek-r1',
+      'deepseek/deepseek-v3.2',
+      // OpenAI
+      'openai/gpt-4o',
+      'openai/gpt-5',
+      'openai/gpt-5.2',
+      'openai/gpt-5.4',
+      // Google
+      'google/gemini-3.1-pro-preview',
+      'google/gemini-2.5-pro',
+      'google/gemini-2.5-flash',
+      'google/gemini-3-flash-preview',
+      // Anthropic
+      'anthropic/claude-opus-4.6',
+      'anthropic/claude-sonnet-4.6',
+      'anthropic/claude-haiku-4.5',
+    ];
+
+    function loadDefaultCompare() {
+      compareModels = [];
+      DEFAULT_COMPARE_MODELS.forEach(id => {
+        const m = allModels.find(x => x.id === id);
+        if (m && compareModels.length < 16) compareModels.push(m);
+      });
+      renderCompareList();
+      renderModelRows();
+      renderCompareChart();
+    }
 
     // Provider colors
     const PROVIDER_COLORS = {
@@ -1185,6 +1232,9 @@
       const sym = currency === 'CNY' ? '¥' : '$';
       const refModel = allModels.find(m => m.id === refModelId);
       const refName = refModel ? refModel.name : '未设置';
+      const refFree = refModel && isFree(refModel);
+      const refInputPrice = refModel && !refFree ? formatPrice(refModel.pricing.prompt) : (refFree ? 'Free' : '-');
+      const refOutputPrice = refModel && !refFree ? formatPrice(refModel.pricing.completion) : (refFree ? 'Free' : '-');
 
       document.getElementById('statsBar').innerHTML = `
     <div class="stat"><div class="stat-val purple">${filteredModels.length}</div><div class="stat-label">模型总数</div></div>
@@ -1192,7 +1242,9 @@
     <div class="stat"><div class="stat-val">${Object.keys(Object.fromEntries(filteredModels.map(m => [m.provider, 1]))).length}</div><div class="stat-label">供应商数</div></div>
     <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${min.toFixed(4)}<span style="font-size:10px;color:var(--text3);margin-left:2px">/1M</span></div><div class="stat-label">最低价</div></div>
     <div class="stat"><div class="stat-val" style="font-size:13px">${sym}${max.toFixed(2)}<span style="font-size:10px;color:var(--text3);margin-left:2px">/1M</span></div><div class="stat-label">最高价</div></div>
-    <div class="stat" style="border-left:1px solid var(--border);padding-left:16px"><div class="stat-val" style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:150px;" title="${refName}">${refName}</div><div class="stat-label">当前参考模型</div></div>
+    <div class="stat" style="border-left:1px solid var(--border);padding-left:16px"><div class="stat-val" style="font-size:13px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;" title="${refName}">${refName}</div><div class="stat-label">当前参考模型</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:13px;color:var(--input-color)">${refInputPrice}<span style="font-size:10px;color:var(--text3);margin-left:2px">/1M</span></div><div class="stat-label">参考·输入</div></div>
+    <div class="stat"><div class="stat-val" style="font-size:13px;color:var(--output-color)">${refOutputPrice}<span style="font-size:10px;color:var(--text3);margin-left:2px">/1M</span></div><div class="stat-label">参考·输出</div></div>
   `;
     }
 
@@ -1361,7 +1413,7 @@
       if (refModel && !isFree(refModel)) {
         const refInput = priceNum(refModel.pricing.prompt);
         const refOutput = priceNum(refModel.pricing.completion);
-        
+
         ctx.lineWidth = 2;
         ctx.setLineDash([4, 2]); // slight dash to distinguish from grid, but looks very solid
 
@@ -1479,7 +1531,7 @@
       if (compareModels.some(c => c.id === id)) {
         compareModels = compareModels.filter(c => c.id !== id);
       } else {
-        if (compareModels.length >= 8) return;
+        if (compareModels.length >= 16) return;
         compareModels.push(m);
       }
       renderCompareList();
@@ -1532,9 +1584,28 @@
       const textColor = isDark ? '#a0a0c0' : '#555570';
       ctx.clearRect(0, 0, W, H);
 
-      const leftPad = 70, rightPad = 20, topPad = 20, bottomPad = 100;
+      const leftPad = 70, rightPad = 20, topPad = 20;
+
+      // --- Dynamic bottomPad for compare chart labels ---
+      ctx.font = '11px JetBrains Mono';
+      const cmpLabelAngle = Math.PI / 4; // 45 degrees
+      const cmpSinA = Math.sin(cmpLabelAngle);
+      const cmpShortNames = compareModels.map(m => m.name.replace(/^[^:]+:\s*/, '').substring(0, 30));
+      let cmpMaxTextW = 0;
+      cmpShortNames.forEach(name => {
+        const w = ctx.measureText(name).width;
+        if (w > cmpMaxTextW) cmpMaxTextW = w;
+      });
+      const bottomPad = Math.ceil(cmpMaxTextW * cmpSinA) + 16;
+
       const plotW = W - leftPad - rightPad;
-      const plotH = H - topPad - bottomPad;
+      const minPlotH = 160;
+      const neededH = topPad + minPlotH + bottomPad;
+      const finalH = Math.max(H, neededH);
+      canvas.height = finalH;
+      const plotH = finalH - topPad - bottomPad;
+
+      ctx.clearRect(0, 0, W, finalH);
 
       // Data
       const metrics = ['Input', 'Output'];
@@ -1545,8 +1616,6 @@
 
       // Grid
       ctx.strokeStyle = isDark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.05)';
-      // 使用实线而不是虚线，提高清晰度
-      // ctx.setLineDash([3,3]);
       for (let i = 0; i <= 4; i++) {
         const y = topPad + plotH * (1 - i / 4);
         ctx.beginPath(); ctx.moveTo(leftPad, y); ctx.lineTo(W - rightPad, y); ctx.stroke();
@@ -1554,7 +1623,45 @@
         const v = maxV * i / 4;
         ctx.fillText((currency === 'CNY' ? '¥' : '$') + v.toFixed(v < 0.01 ? 4 : 2), leftPad - 6, y + 3);
       }
-      // ctx.setLineDash([]);
+
+      // Reference lines (from reference model)
+      const cmpRefModel = allModels.find(m => m.id === refModelId);
+      if (cmpRefModel && !isFree(cmpRefModel)) {
+        const refInput = priceNum(cmpRefModel.pricing.prompt);
+        const refOutput = priceNum(cmpRefModel.pricing.completion);
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 2]);
+
+        if (refInput > 0 && refInput <= maxV) {
+          const iy = topPad + plotH - (refInput / maxV) * plotH;
+          ctx.beginPath();
+          ctx.moveTo(leftPad, iy);
+          ctx.lineTo(W - rightPad, iy);
+          ctx.strokeStyle = 'rgba(124,111,255,0.9)';
+          ctx.stroke();
+          // Label
+          ctx.font = '10px JetBrains Mono';
+          ctx.fillStyle = 'rgba(124,111,255,0.9)';
+          ctx.textAlign = 'left';
+          ctx.fillText('参考-输入', leftPad + 4, iy - 4);
+        }
+
+        if (refOutput > 0 && refOutput <= maxV) {
+          const oy = topPad + plotH - (refOutput / maxV) * plotH;
+          ctx.beginPath();
+          ctx.moveTo(leftPad, oy);
+          ctx.lineTo(W - rightPad, oy);
+          ctx.strokeStyle = 'rgba(255,107,157,0.9)';
+          ctx.stroke();
+          // Label
+          ctx.font = '10px JetBrains Mono';
+          ctx.fillStyle = 'rgba(255,107,157,0.9)';
+          ctx.textAlign = 'left';
+          ctx.fillText('参考-输出', leftPad + 4, oy - 4);
+        }
+        ctx.setLineDash([]);
+        ctx.lineWidth = 1;
+      }
 
       // Bars (grouped)
       const barGroupW = plotW / compareModels.length;
@@ -1582,7 +1689,7 @@
         ctx.font = '11px JetBrains Mono';
         ctx.fillStyle = textColor;
         ctx.textAlign = 'right';
-        ctx.fillText(m.name.replace(/^[^:]+:\s*/, '').substring(0, 30), 0, 0);
+        ctx.fillText(cmpShortNames[i], 0, 0);
         ctx.restore();
       });
     }
